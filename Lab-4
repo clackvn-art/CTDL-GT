@@ -1,0 +1,497 @@
+# Lab 4_bai 1
+def activity_selection(activities): 
+    """ 
+    Chọn số lượng hoạt động tối đa không chồng lấp 
+    Chiến lược: Chọn kết thúc sớm nhất (earliest finish time) 
+     
+    Input: activities = [(start, finish), ...] 
+    Output: list của các hoạt động được chọn 
+    """ 
+    if not activities: 
+        return [] 
+     
+    # Bước 1: Sort theo finish time (thời gian kết thúc) 
+    activities.sort(key=lambda x: x[1]) 
+     
+    # Bước 2: Chọn hoạt động đầu tiên (kết thúc sớm nhất) 
+    selected = [activities[0]] 
+    last_finish = activities[0][1] 
+     
+    # Bước 3: Duyệt các hoạt động còn lại 
+    for i in range(1, len(activities)): 
+        start, finish = activities[i] 
+         
+        # Nếu không xung đột (start >= last_finish) → chọn 
+        if start >= last_finish: 
+            selected.append((start, finish)) 
+            last_finish = finish 
+     
+    return selected
+
+# Test case 1 
+print("=== Test Activity Selection ===") 
+activities1 = [ 
+    (1, 4),   # A1 
+    (3, 5),   # A2 
+    (0, 6),   # A3 
+    (5, 7),   # A4 
+    (3, 9),   # A5 
+    (5, 9),   # A6 
+    (6, 10),  # A7 
+    (8, 11),  # A8 
+    (8, 12),  # A9 
+    (2, 14),  # A10 
+    (12, 16)  # A11 
+] 
+ 
+result1 = activity_selection(activities1) 
+print(f"Hoạt động được chọn: {result1}") 
+print(f"Số lượng: {len(result1)}")  # Kỳ vọng: 4 
+ 
+# Test case 2 
+activities2 = [ 
+    (1, 3), 
+    (2, 4), 
+    (3, 5), 
+    (4, 6) 
+] 
+ 
+result2 = activity_selection(activities2) 
+print(f"\nHoạt động được chọn: {result2}") 
+print(f"Số lượng: {len(result2)}")  # Kỳ vọng: 2 
+
+def coin_change_greedy(amount, coins): 
+    """ 
+    Đổi tiền bằng số xu ít nhất (Greedy approach) 
+    Chiến lược: Luôn chọn mệnh giá lớn nhất có thể 
+    LƯU Ý: Chỉ đúng với hệ tiền chuẩn (canonical coin system)! 
+    Input: amount (số tiền), coins (list mệnh giá) 
+    Output: số xu ít nhất, hoặc -1 nếu không đổi được 
+    """ 
+    # Bước 1: Sort giảm dần (lớn nhất trước) 
+    coins.sort(reverse=True) 
+    count = 0
+
+    result = []  # Lưu chi tiết các xu đã dùng 
+     
+    # Bước 2: Duyệt từng mệnh giá 
+    for coin in coins: 
+        # Lấy nhiều nhất có thể từ mệnh giá này 
+        while amount >= coin: 
+            result.append(coin) 
+            amount -= coin 
+            count += 1 
+     
+    # Bước 3: Kiểm tra kết quả 
+    if amount == 0: 
+        return count, result 
+    else: 
+        return -1, []  # Không đổi được
+    
+# Test case 1: Hệ tiền chuẩn (Greedy ĐÚNG) 
+print("\n=== Test Coin Change Greedy ===") 
+print("Test 1: Hệ tiền chuẩn [25, 10, 5, 1]") 
+amount1 = 63 
+coins1 = [25, 10, 5, 1] 
+count1, result1 = coin_change_greedy(amount1, coins1) 
+print(f"Số tiền: {amount1}") 
+print(f"Số xu: {count1}") 
+print(f"Chi tiết: {result1}") 
+# Kỳ vọng: 6 xu [25, 25, 10, 1, 1, 1] 
+ 
+# Test case 2: Hệ tiền chuẩn khác 
+print("\nTest 2: Hệ tiền VN [500, 200, 100, 50, 20, 10]") 
+amount2 = 370 
+coins2 = [500, 200, 100, 50, 20, 10] 
+count2, result2 = coin_change_greedy(amount2, coins2) 
+print(f"Số tiền: {amount2}") 
+print(f"Số xu: {count2}") 
+print(f"Chi tiết: {result2}") 
+# Kỳ vọng: 4 xu [200, 100, 50, 20]
+
+def fractional_knapsack(capacity, items): 
+    """ 
+    Bài toán Ba lô phân số (Fractional Knapsack) 
+    Chiến lược: Chọn vật có value/weight cao nhất trước 
+     
+    Input:  
+        capacity: sức chứa ba lô 
+        items: [(weight, value), ...] 
+    Output: giá trị tối đa 
+    """ 
+    # Bước 1: Tính ratio (value/weight) cho mỗi vật 
+    # và sort giảm dần theo ratio 
+    items_with_ratio = [] 
+    for weight, value in items: 
+        ratio = value / weight 
+        items_with_ratio.append((weight, value, ratio)) 
+     
+    # Sort theo ratio giảm dần 
+    items_with_ratio.sort(key=lambda x: x[2], reverse=True) 
+     
+    # Bước 2: Duyệt và chọn 
+    total_value = 0.0 
+    remaining_capacity = capacity 
+    result = []  # Lưu chi tiết các vật đã chọn 
+     
+    for weight, value, ratio in items_with_ratio: 
+        if remaining_capacity == 0: 
+            break 
+         
+        # Nếu vật nhẹ hơn sức chứa còn lại → lấy hết 
+        if weight <= remaining_capacity:
+            total_value += value 
+            remaining_capacity -= weight 
+            result.append((weight, value, 1.0))  # Lấy 100% 
+        else: 
+            # Lấy một phần của vật 
+            fraction = remaining_capacity / weight 
+            total_value += value * fraction 
+            result.append((weight, value, fraction)) 
+            remaining_capacity = 0 
+     
+    return total_value, result
+
+# Test case 1 
+print("\n=== Test Fractional Knapsack ===") 
+capacity1 = 50 
+items1 = [ 
+    (10, 60),  # ratio = 6.0 
+    (20, 100), # ratio = 5.0 
+    (30, 120)  # ratio = 4.0 
+] 
+ 
+total1, result1 = fractional_knapsack(capacity1, items1) 
+print(f"Sức chứa: {capacity1}") 
+print(f"Giá trị tối đa: {total1}") 
+print(f"Chi tiết:") 
+for weight, value, fraction in result1: 
+    print(f"  Vật (w={weight}, v={value}): Lấy {fraction*100:.1f}%") 
+# Kỳ vọng: 240 (lấy hết vật 1 và 2, lấy 2/3 vật 3) 
+ 
+# Test case 2 
+capacity2 = 60 
+items2 = [ 
+    (10, 500),  # ratio = 50 
+    (20, 300),  # ratio = 15 
+    (30, 400)   # ratio = 13.33 
+] 
+ 
+total2, result2 = fractional_knapsack(capacity2, items2) 
+print(f"\nSức chứa: {capacity2}") 
+print(f"Giá trị tối đa: {total2}") 
+print(f"Chi tiết:") 
+for weight, value, fraction in result2: 
+    print(f"  Vật (w={weight}, v={value}): Lấy {fraction*100:.1f}%")
+
+def min_intervals_remove(intervals): 
+    """ 
+    Tìm số khoảng thời gian ít nhất cần xóa 
+    để còn lại không chồng lấp 
+     
+    Chiến lược: Tìm số khoảng tối đa giữ lại (Activity Selection) 
+    → Số xóa = tổng - số giữ lại 
+    """ 
+    if not intervals: 
+        return 0 
+     
+    # Tái sử dụng hàm activity_selection 
+    max_keep = activity_selection(intervals) 
+     
+    # Số cần xóa 
+    num_remove = len(intervals) - len(max_keep) 
+     
+    return num_remove 
+ 
+ 
+# Test case 1 
+print("\n=== Test Minimum Intervals Remove ===") 
+intervals1 = [ 
+    (1, 2), 
+    (2, 3), 
+    (3, 4), 
+    (1, 3) 
+] 
+ 
+result1 = min_intervals_remove(intervals1) 
+print(f"Intervals: {intervals1}") 
+print(f"Số khoảng cần xóa: {result1}") 
+print(f"Giải thích: Có thể giữ 3 khoảng [1,2], [2,3], [3,4]") 
+print(f"           → Xóa 1 khoảng [1,3]") 
+# Kỳ vọng: 1 
+ 
+# Test case 2 
+intervals2 = [ 
+    (1, 2), 
+    (1, 2), 
+    (1, 2) 
+] 
+ 
+result2 = min_intervals_remove(intervals2) 
+print(f"\nIntervals: {intervals2}") 
+print(f"Số khoảng cần xóa: {result2}") 
+print(f"Giải thích: Chỉ giữ được 1 khoảng → xóa 2") 
+# Kỳ vọng: 2 
+ 
+# Test case 3 
+intervals3 = [ 
+    (1, 100), 
+    (11, 22), 
+    (1, 11), 
+    (2, 12) 
+] 
+ 
+result3 = min_intervals_remove(intervals3) 
+print(f"\nIntervals: {intervals3}") 
+print(f"Số khoảng cần xóa: {result3}") 
+# Kỳ vọng: 2
+
+# Lab 4_bai 2
+import heapq
+import time
+
+def min_meeting_rooms(meetings): 
+    """ 
+    Tìm số phòng họp tối thiểu cần thiết 
+    Chiến lược: Sort theo start time + dùng Heap theo dõi end time 
+    """ 
+    if not meetings: 
+        return 0 
+     
+    # TODO: Sort meetings theo start time 
+    meetings.sort(key=lambda x: x[0]) 
+     
+    # Heap lưu end time của các phòng đang dùng 
+    heap = [] 
+     
+    # TODO: Thêm meeting đầu tiên vào heap 
+    heapq.heappush(heap, meetings[0][1]) 
+     
+    # TODO: Duyệt các meetings còn lại 
+    for i in range(1, len(meetings)): 
+        start, end = meetings[i] 
+         
+        # Nếu meeting bắt đầu sau khi phòng sớm nhất kết thúc 
+        # → Tái sử dụng phòng (pop phòng cũ) 
+        if start >= heap[0]: 
+            heapq.heappop(heap) 
+         
+        # Thêm meeting hiện tại (dùng phòng mới hoặc tái sử dụng) 
+        heapq.heappush(heap, end) 
+     
+    # Số phòng = kích thước heap 
+    return len(heap)
+
+# Test case 1
+meetings1 = [[0, 30], [5, 10], [15, 20]]
+print("Room 1:", min_meeting_rooms(meetings1))  # Output: 2
+
+
+# Test case 2
+meetings2 = [[1, 5], [8, 9], [8, 9]]
+print("Room 2:", min_meeting_rooms(meetings2))  # Output: 2
+
+
+# Test case 3
+meetings3 = [[1, 10], [2, 7], [3, 19], [8, 12], [10, 20], [11, 30]]
+print("Room 3:", min_meeting_rooms(meetings3))  # Output: 4
+
+def coin_change_dp(amount, coins): 
+    """ 
+    Coin Change với Dynamic Programming 
+    Luôn cho lời giải tối ưu 
+     
+    dp[i] = số xu ít nhất để đổi số tiền i 
+    dp[i] = min(dp[i - coin] + 1) với mọi coin <= i 
+    """ 
+    # TODO: Khởi tạo dp array 
+    dp = [float('inf')] * (amount + 1) 
+    dp[0] = 0  # Base case 
+     
+    # TODO: Tính dp[i] cho i từ 1 đến amount 
+    for i in range(1, amount + 1): 
+        for coin in coins: 
+            if coin <= i: 
+                dp[i] = min(dp[i], dp[i - coin] + 1) 
+     
+    # TODO: Trả về kết quả 
+    if dp[amount] == float('inf'): 
+        return -1 
+    return dp[amount]
+
+def coin_change_greedy(amount, coins): 
+    """ 
+    Coin Change với Greedy 
+    Không đảm bảo tối ưu nếu hệ coin không chuẩn 
+    """ 
+    coins.sort(reverse=True)  # Sort coins giảm dần 
+    count = 0 
+    detail = []  # Chi tiết số lượng mỗi coin dùng 
+     
+    for coin in coins: 
+        if amount <= 0: 
+            break 
+        num = amount // coin  # Số coin loại này cần dùng 
+        if num > 0: 
+            count += num 
+            amount -= num * coin 
+            detail.append((coin, num))  # Lưu chi tiết 
+     
+    if amount > 0:  # Nếu còn dư tiền mà không đổi được 
+        return -1, detail 
+    return count, detail
+
+def compare_coin_change(amount, coins): 
+    print(f"\n{'='*60}") 
+    print(f"So sánh Coin Change: amount={amount}, coins={coins}") 
+    print(f"{'='*60}") 
+     
+    # TODO: Test Greedy 
+    print("\n[1] GREEDY:") 
+    start = time.time() 
+    greedy_result, greedy_detail = coin_change_greedy(amount, coins) 
+    greedy_time = time.time() - start 
+    print(f"Kết quả: {greedy_result} xu") 
+    print(f"Chi tiết: {greedy_detail}") 
+    print(f"Thời gian: {greedy_time:.6f}s") 
+     
+    # TODO: Test DP 
+    print("\n[2] DYNAMIC PROGRAMMING:") 
+    start = time.time() 
+    dp_result = coin_change_dp(amount, coins) 
+    dp_time = time.time() - start 
+    print(f"Kết quả: {dp_result} xu") 
+    print(f"Thời gian: {dp_time:.6f}s") 
+     
+    # TODO: So sánh 
+    print("\n[3] SO SÁNH:") 
+    if greedy_result == dp_result: 
+        print("✅ Greedy ĐÚNG - cho kết quả tối ưu!") 
+    else: 
+        print(f"❌ Greedy SAI - kém hơn {dp_result - greedy_result} xu!") 
+    print(f"Tốc độ: Greedy nhanh hơn {dp_time/greedy_time:.2f}x") 
+ 
+# Test với hệ tiền chuẩn 
+compare_coin_change(67, [25, 10, 5, 1])
+
+# Test với hệ mệnh giá lạ 
+compare_coin_change(30, [11, 15, 52])
+
+# Lab 4_bai 3
+import random 
+import time
+
+def find_content_children(greed, cookies): 
+    """ 
+    Assign Cookies - LeetCode 455 
+    Chiến lược: Sort cả 2 mảng + Two Pointers 
+    """ 
+    # TODO: Sort cả greed và cookies 
+    greed.sort() 
+    cookies.sort() 
+    
+    # TODO: Dùng 2 con trỏ duyệt 
+    i, j = 0, 0 
+    content_children = 0 
+    
+    while i < len(greed) and j < len(cookies): 
+        if cookies[j] >= greed[i]: 
+            content_children += 1 
+            i += 1 
+        j += 1 
+    
+    # TODO: Trả về số trẻ đã thỏa mãn 
+    return content_children
+
+def manhattan_distance(workers, bikes): 
+    return abs(workers[0] - bikes[0]) + abs(workers[1] - bikes[1]) 
+
+def assign_bikes(workers, bikes):
+
+    distances = []
+
+    # Tính tất cả khoảng cách
+    for w in range(len(workers)):
+        for b in range(len(bikes)):
+
+            dist = manhattan_distance(
+                workers[w],
+                bikes[b]
+            )
+
+            distances.append((dist, w, b))
+
+    # Sort theo khoảng cách tăng dần
+    distances.sort()
+
+    assigned_workers = set()
+    assigned_bikes = set()
+
+    result = [-1] * len(workers)
+
+    # Greedy chọn cặp gần nhất
+    for dist, w, b in distances:
+
+        if w not in assigned_workers and b not in assigned_bikes:
+
+            result[w] = b
+
+            assigned_workers.add(w)
+            assigned_bikes.add(b)
+
+    return result
+
+workers = [(5,3), (2,1)]
+bikes = [(6,2), (3,4)]
+
+print(assign_bikes(workers, bikes))
+
+def generate_test_data(n): 
+    """Tạo dữ liệu test ngẫu nhiên""" 
+    activities = [] 
+    for i in range(n): 
+        start = random.randint(0, 100) 
+        duration = random.randint(1, 20) 
+        end = start + duration 
+        activities.append((start, end)) 
+    return activities 
+
+def activity_selection(activities):
+    """
+    activities: list of tuples (start, finish)
+    Return: list of selected activities
+    """
+
+    # Bước 1: Sort theo finish time
+    activities.sort(key=lambda x: x[1])
+
+    # Bước 2: Chọn hoạt động đầu tiên
+    selected = [activities[0]]
+    last_finish = activities[0][1]
+
+    # Bước 3: Duyệt các hoạt động còn lại
+    for i in range(1, len(activities)):
+        start, finish = activities[i]
+
+        # Kiểm tra không xung đột
+        if start >= last_finish:
+            selected.append((start, finish))
+            last_finish = finish
+
+    return selected
+
+def benchmark_activity_selection(sizes): 
+    """Đo thời gian với các kích thước input khác nhau""" 
+    times = [] 
+    for size in sizes: 
+        activities = generate_test_data(size)
+        start = time.time() 
+        activity_selection(activities) 
+        elapsed = time.time() - start 
+        times.append(elapsed) 
+        print(f"n={size}: {elapsed:.6f}s") 
+        return times 
+    
+# Test 
+sizes = [100, 500, 1000, 5000, 10000] 
+times = benchmark_activity_selection(sizes)
