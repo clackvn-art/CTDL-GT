@@ -1,0 +1,527 @@
+from collections import deque
+
+#Lab 5 Bai 1
+def build_graph(edges, directed=False): 
+    graph = {} 
+     
+    # Duyệt qua từng cạnh 
+    for u, v in edges: 
+        # Khởi tạo đỉnh u nếu chưa có 
+        if u not in graph:
+            graph[u] = []
+         # Khởi tạo đỉnh v nếu chưa có 
+        if v not in graph: 
+            graph[v] = [] 
+         
+        # Thêm cạnh u → v 
+        graph[u].append(v) 
+         
+        # Nếu vô hướng, thêm cạnh v → u 
+        if not directed: 
+            graph[v].append(u) 
+     
+    return graph
+
+# Test case 1: Đồ thị vô hướng 
+print("=== Test 1: Đồ thị vô hướng ===") 
+edges1 = [ 
+    ('A', 'B'), 
+    ('A', 'C'), 
+    ('B', 'D'), 
+    ('C', 'D'), 
+    ('D', 'E') 
+] 
+
+graph1 = build_graph(edges1, directed=False) 
+print("Đồ thị vô hướng:") 
+for vertex, neighbors in graph1.items(): 
+    print(f"  {vertex}: {neighbors}") 
+
+
+# Test case 2: Đồ thị có hướng 
+print("\n=== Test 2: Đồ thị có hướng ===") 
+edges2 = [ 
+    ('A', 'B'), 
+    ('A', 'C'), 
+    ('B', 'D'), 
+    ('C', 'D'), 
+    ('D', 'E') 
+] 
+
+graph2 = build_graph(edges2, directed=True) 
+print("Đồ thị có hướng:") 
+for vertex, neighbors in graph2.items(): 
+    print(f"  {vertex}: {neighbors}")
+
+def bfs(graph, start): 
+    # Khởi tạo 
+    visited = set() 
+    queue = deque([start]) 
+    visited.add(start) 
+    result = [] 
+     
+    # BFS loop 
+    while queue: 
+        # Lấy đỉnh từ đầu queue (FIFO) 
+        vertex = queue.popleft() 
+        result.append(vertex) 
+         
+        # Duyệt các đỉnh kề
+        for neighbor in graph[vertex]: 
+            # Nếu chưa thăm, đánh dấu và thêm vào queue 
+            if neighbor not in visited: 
+                visited.add(neighbor) 
+                queue.append(neighbor) 
+     
+    return result
+
+# Test case 1 
+print("\n=== Test BFS ===") 
+graph = { 
+    'A': ['B', 'C'], 
+    'B': ['A', 'D', 'E'], 
+    'C': ['A', 'F'], 
+    'D': ['B'], 
+    'E': ['B', 'F'], 
+    'F': ['C', 'E'] 
+} 
+ 
+result = bfs(graph, 'A') 
+print(f"BFS từ A: {result}") 
+
+# Test case 2
+print("\n=== Test BFS ===")
+graph = { 
+    'A': ['B', 'C'], 
+    'B': ['D'], 
+    'C': ['D'], 
+    'D': ['E'], 
+    'E': [] 
+}
+
+result = bfs(graph, 'A')
+print(f"BFS từ A: {result}")
+
+def dfs_recursive(graph, start, visited=None, result=None):
+    if visited is None:
+        visited = set()
+    if result is None:
+        result = []
+    
+    # Đánh dấu đỉnh hiện tại
+    visited.add(start)
+    result.append(start)
+    
+    # Đệ quy với các đỉnh kề chưa thăm
+    for neighbor in graph[start]:
+        if neighbor not in visited:
+            dfs_recursive(graph, neighbor, visited, result)
+    
+    return result
+
+# Test case 1 
+print("\n=== Test DFS Recursive ===") 
+graph = { 
+    'A': ['B', 'C'], 
+    'B': ['A', 'D', 'E'], 
+    'C': ['A', 'F'], 
+    'D': ['B'], 
+    'E': ['B', 'F'], 
+    'F': ['C', 'E'] 
+} 
+ 
+result = dfs_recursive(graph, 'A') 
+print(f"DFS từ A: {result}") 
+
+# Test case 2
+print("\n=== Test DFS Recursive ===")
+graph = { 
+    'A': ['B', 'C'], 
+    'B': ['D'], 
+    'C': ['D'], 
+    'D': ['E'], 
+    'E': [] 
+}
+
+result = dfs_recursive(graph, 'A')
+print(f"DFS từ A: {result}")
+
+def count_connected_components(graph): 
+    visited = set() 
+    components = [] 
+
+    def bfs_component(start): 
+        """BFS helper để tìm một component""" 
+        queue = deque([start]) 
+        visited.add(start) 
+        component = [] 
+         
+        while queue: 
+            vertex = queue.popleft() 
+            component.append(vertex) 
+             
+            for neighbor in graph[vertex]: 
+                if neighbor not in visited: 
+                    visited.add(neighbor) 
+                    queue.append(neighbor) 
+         
+        return component
+    
+     # Duyệt tất cả các đỉnh 
+    for vertex in graph: 
+        if vertex not in visited: 
+            # Tìm component chứa vertex
+            component = bfs_component(vertex) 
+            components.append(component) 
+     
+    return len(components), components
+
+# Test case 1: Đồ thị có 1 component 
+print("\n=== Test Connected Components ===") 
+print("Test 1: 1 component") 
+graph1 = { 
+    'A': ['B', 'C'], 
+    'B': ['A', 'D'], 
+    'C': ['A'], 
+    'D': ['B'] 
+} 
+ 
+count1, comps1 = count_connected_components(graph1) 
+print(f"Số components: {count1}") 
+for i, comp in enumerate(comps1, 1): 
+    print(f"  Component {i}: {comp}") 
+
+# Test case 2: Đồ thị có 2 component 
+print("\nTest 2: 2 components")
+graph2 = { 
+    'A': ['B'], 
+    'B': ['A'], 
+    'C': ['D'], 
+    'D': ['C'] 
+}
+
+count2, comps2 = count_connected_components(graph2)
+print(f"Số components: {count2}")
+for i, comp in enumerate(comps2, 1):
+    print(f"  Component {i}: {comp}")
+
+# Lab 5 bai 2
+def has_cycle_undirected(graph): 
+    visited = set() 
+     
+    def dfs(vertex, parent): 
+        # Đánh dấu vertex là visited 
+        visited.add(vertex) 
+         
+        # Duyệt các neighbors 
+        for neighbor in graph[vertex]: 
+            if neighbor not in visited: 
+                # Đệ quy với neighbor 
+                if dfs(neighbor, vertex): 
+                    return True 
+            elif neighbor != parent: 
+                # Gặp đỉnh đã visited và không phải cha 
+                return True 
+         
+        return False 
+     
+    # Duyệt tất cả các đỉnh (đồ thị có thể không liên thông) 
+    for vertex in graph: 
+        if vertex not in visited: 
+            if dfs(vertex, None): 
+                return True 
+     
+    return False
+
+# Test cases 
+print("=== Test Cycle Detection - Undirected ===") 
+ 
+# Test 1: Có chu trình 
+graph1 = { 
+    0: [1, 2], 
+    1: [0, 3], 
+    2: [0, 3], 
+    3: [1, 2] 
+} 
+print(f"Test 1 (có chu trình): {has_cycle_undirected(graph1)}")
+
+# Test 2: Không có chu trình
+graph2 = {
+    0: [1], 
+    1: [0, 2], 
+    2: [1, 3], 
+    3: [2] 
+}
+print(f"Test 2 (không có chu trình): {has_cycle_undirected(graph2)}")
+
+# Test 3: Đồ thị không liên thông với chu trình 
+graph3 = { 
+    0: [1], 
+    1: [0], 
+    2: [3, 4], 
+    3: [2, 4], 
+    4: [2, 3] 
+} 
+print(f"Test 3 (nhiều components, có chu trình): {has_cycle_undirected(graph3)}")
+
+def has_cycle_directed(graph): 
+    WHITE, GRAY, BLACK = 0, 1, 2 
+     
+    # Khởi tạo color cho tất cả đỉnh là WHITE 
+    color = {vertex: WHITE for vertex in graph} 
+     
+    def dfs(vertex): 
+        # Đánh dấu đỉnh đang xử lý (GRAY) 
+        color[vertex] = GRAY
+
+        # Duyệt các neighbors 
+        for neighbor in graph[vertex]: 
+            # Nếu neighbor đang GRAY → trong recursion stack → có chu trình 
+            if color[neighbor] == GRAY: 
+                return True 
+             
+            # Nếu neighbor là WHITE → chưa thăm 
+            if color[neighbor] == WHITE: 
+                if dfs(neighbor): 
+                    return True 
+         
+        # Xử lý xong đỉnh này (BLACK) 
+        color[vertex] = BLACK 
+        return False 
+     
+    # Duyệt tất cả các đỉnh 
+    for vertex in graph: 
+        if color[vertex] == WHITE: 
+            if dfs(vertex): 
+                return True 
+     
+    return False
+
+# Test cases
+print("\n=== Test Cycle Detection - Directed ===")
+# Test 1: Có chu trình
+graph4 = {
+    0: [1], 
+    1: [2], 
+    2: [0] 
+}
+print(f"Test 1 (có chu trình): {has_cycle_directed(graph4)}")
+
+# Test 2: Không có chu trình
+graph5 = {
+    0: [1], 
+    1: [2],
+    2: []
+}  
+print(f"Test 2 (không có chu trình): {has_cycle_directed(graph5)}")
+
+# Test 3: Đồ thị có nhiều đỉnh nhưng không có chu trình
+graph6 = {
+    0: [1, 2], 
+    1: [3], 
+    2: [3], 
+    3: [] 
+}
+print(f"Test 3 (nhiều đỉnh, không có chu trình): {has_cycle_directed(graph6)}")
+
+def compare_cycle_detection(): 
+    print("\n" + "="*60) 
+    print("SO SÁNH CYCLE DETECTION") 
+    print("="*60) 
+     
+    print("\n[1] ĐỒ THỊ VÔ HƯỚNG:") 
+    undirected = { 
+        0: [1, 2], 
+        1: [0, 3], 
+        2: [0], 
+        3: [1] 
+    } 
+    print (f"Đồ thị: {undirected}")
+     
+    # Test case đồ thị có hướng 
+    print("\n[2] ĐỒ THỊ CÓ HƯỚNG:") 
+    directed = { 
+        0: [1], 
+        1: [2], 
+        2: [0] 
+    } 
+    print(f"Đồ thị: {directed}")
+     
+    # So sánh 
+    print("\n[3] SO SÁNH:") 
+    print("Vô hướng: Kiểm tra parent") 
+    print(has_cycle_undirected(undirected))
+    print("Có hướng: Three-color (WHITE/GRAY/BLACK)")
+    print(has_cycle_directed(directed))
+    print("Cả hai: Độ phức tạp O(V + E)")
+compare_cycle_detection()
+
+# Lab 5 bai 3
+def has_cycle_directed(graph): 
+    WHITE, GRAY, BLACK = 0, 1, 2 
+     
+    # Khởi tạo color cho tất cả đỉnh là WHITE 
+    color = {vertex: WHITE for vertex in graph} 
+     
+    def dfs(vertex): 
+        # Đánh dấu đỉnh đang xử lý (GRAY) 
+        color[vertex] = GRAY
+
+        # Duyệt các neighbors 
+        for neighbor in graph[vertex]: 
+            # Nếu neighbor đang GRAY → trong recursion stack → có chu trình 
+            if color[neighbor] == GRAY: 
+                return True 
+             
+            # Nếu neighbor là WHITE → chưa thăm 
+            if color[neighbor] == WHITE: 
+                if dfs(neighbor): 
+                    return True 
+         
+        # Xử lý xong đỉnh này (BLACK) 
+        color[vertex] = BLACK 
+        return False 
+     
+    # Duyệt tất cả các đỉnh 
+    for vertex in graph: 
+        if color[vertex] == WHITE: 
+            if dfs(vertex): 
+                return True 
+     
+    return False
+
+def topological_sort_dfs(graph): 
+    # Kiểm tra chu trình trước 
+    if has_cycle_directed(graph): 
+         return None 
+     
+    visited = set() 
+    stack = [] 
+     
+    def dfs(vertex): 
+        # Đánh dấu visited 
+        visited.add(vertex)
+        # Duyệt neighbors 
+        for neighbor in graph[vertex]:
+            if neighbor not in visited:
+                dfs(neighbor)
+        # Thêm vào stack (post-order) 
+        stack.append(vertex)
+     
+    # DFS từ mọi đỉnh chưa visited 
+    for vertex in graph:
+        if vertex not in visited:
+            dfs(vertex)
+     
+    # Return stack đảo ngược 
+    return stack[::-1]
+
+# Test 1: Có chu trình
+graph1 = {
+    0: [1], 
+    1: [2], 
+    2: [0] 
+}
+print(f"Test 1 (có chu trình): {topological_sort_dfs(graph1)}")
+
+# Test 2: Không có chu trình
+graph2 = {
+    0: [1],     
+    1: [2],
+    2: []
+}
+print(f"Test 2 (không có chu trình): {topological_sort_dfs(graph2)}")
+
+# Test 3: Đồ thị có nhiều components, không có chu trình
+graph3 = {
+    0: [1], 
+    1: [], 
+    2: [3], 
+    3: [] 
+}
+print(f"Test 3 (nhiều components, không có chu trình): {topological_sort_dfs(graph3)}")
+
+def topological_sort_kahn(graph): 
+    # Tính in-degree cho mỗi đỉnh
+    in_degree = {v: 0 for v in graph} 
+     
+    # Tính in-degree cho mỗi đỉnh
+    for vertex in graph:
+        for neighbor in graph[vertex]:
+            in_degree[neighbor] += 1
+     
+    # Thêm đỉnh có in-degree = 0 vào queue 
+    queue = deque() 
+    for vertex in graph:
+        if in_degree[vertex] == 0:
+            queue.append(vertex)
+     
+    # BFS loop 
+    result = []
+    while queue: 
+        # Lấy đỉnh từ đầu queue (FIFO) 
+        vertex = queue.popleft() 
+        result.append(vertex) 
+         
+        # Duyệt các đỉnh kề
+        for neighbor in graph[vertex]:
+
+            in_degree[neighbor] -= 1
+
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor) 
+
+     # Kiểm tra chu trình 
+    if len(result) != len(graph): 
+        return None  # Có chu trình 
+     
+    return result 
+
+# Test 1: Có chu trình
+print(f"Test 1 (có chu trình): {topological_sort_kahn(graph1)}")
+
+# Test 2: Không có chu trình
+print(f"Test 2 (không có chu trình): {topological_sort_kahn(graph2)}")
+
+# Test 3: Đồ thị có nhiều components, không có chu trình
+print(f"Test 3 (nhiều components, không có chu trình): {topological_sort_kahn(graph3)}")
+
+def can_finish(num_courses, prerequisites): 
+    # Xây dựng đồ thị 
+    graph = {i: [] for i in range(num_courses)}
+
+    for course, pre in prerequisites:
+        graph[pre].append(course)
+
+    # Kiểm tra chu trình
+    if has_cycle_directed(graph):
+        return False
+    return True
+
+def find_order(num_courses, prerequisites): 
+    # Xây dựng đồ thị 
+    graph = {i: [] for i in range(num_courses)}
+    for course, pre in prerequisites:
+        graph[pre].append(course)
+
+    
+     
+    # Topological sort 
+    order = topological_sort_dfs(graph)
+    if order is None:
+        return []  # Có chu trình
+    return order
+
+print("\n=== Test Course Schedule ===") 
+ 
+# Test 1: Có thể hoàn thành 
+n1 = 4
+prereqs1 = [[1, 0], [2, 0], [3, 1], [3, 2]] 
+print(f"Test 1: {can_finish(n1, prereqs1)}")  
+print(f"Order: {find_order(n1, prereqs1)}")  
+
+# Test 2: Có chu trình 
+n2 = 2 
+prereqs2 = [[1, 0], [0, 1]] 
+print(f"Test 2: {can_finish(n2, prereqs2)}")  
+print(f"Order: {find_order(n2, prereqs2)}")  
