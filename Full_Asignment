@@ -1,0 +1,860 @@
+# main asignment
+from routing import (demo_routing_shortest_path, demo_kruskal_mst)
+from hashing_tool import (
+    demo_order_hash_table,
+    demo_group_coupon_anagrams,
+    demo_longest_consecutive_days,
+    demo_count_revenue_windows,
+    demo_rolling_coupon_search
+)
+
+from promo_optimizer import (
+    demo_dp_basics,
+    demo_combo_knapsack_2d,
+    demo_combo_knapsack_1d
+)
+
+
+def menu():
+    while True:
+
+        print("\n" + "=" * 50)
+        print("        POLY SHIP - ALGORITHM DEMO")
+        print("=" * 50)
+
+        print("1. Demo Routing - Shortest Path")
+        print("2. Demo MST - Minimum Spanning Tree")
+        print("3. Demo Hash Table đơn hàng")
+        print("4. Demo Hashing")
+        print("5. Demo Rolling Hash")
+        print("6. Demo Dynamic Programming cơ bản")
+        print("7. Demo Combo Khuyến mãi (Knapsack)")
+        print("8. Thoát")
+
+        choice = input("\nChọn chức năng: ")
+
+        # -----------------------
+        if choice == "1":
+            print("\n===== ROUTING =====")
+            demo_routing_shortest_path()
+
+        # -----------------------
+        elif choice == "2":
+            print("\n===== MST =====")
+            demo_kruskal_mst()
+
+        # -----------------------
+        elif choice == "3":
+            print("\n===== ORDER HASH TABLE =====")
+            demo_order_hash_table()
+
+        # -----------------------
+        elif choice == "4":
+
+            print("\n===== GROUP ANAGRAMS =====")
+            demo_group_coupon_anagrams()
+
+            print("\n===== LONGEST CONSECUTIVE DAYS =====")
+            demo_longest_consecutive_days()
+
+            print("\n===== SUBARRAY SUM = K =====")
+            demo_count_revenue_windows()
+
+        # -----------------------
+        elif choice == "5":
+
+            print("\n===== ROLLING HASH =====")
+            demo_rolling_coupon_search()
+
+        # -----------------------
+        elif choice == "6":
+
+            print("\n===== DP BASICS =====")
+            demo_dp_basics()
+
+        # -----------------------
+        elif choice == "7":
+
+            print("\n===== KNAPSACK 2D =====")
+            demo_combo_knapsack_2d()
+
+            print("\n===== KNAPSACK 1D =====")
+            demo_combo_knapsack_1d()
+
+        # -----------------------
+        elif choice == "8":
+
+            print("\nCảm ơn bạn đã sử dụng chương trình!")
+            break
+
+        # -----------------------
+        else:
+            print("\nLựa chọn không hợp lệ. Vui lòng chọn lại.")
+menu()
+
+# routing
+def build_graph(edge):
+    graph = {}
+    for u, v, cost in edge:
+        # Nếu đỉnh chưa tồn tại thì tạo mới
+        if u not in graph:
+            graph[u] = []
+        if v not in graph:
+            graph[v] = []
+
+        # Thêm cạnh u -> v
+        graph[u].append((v, cost))
+        graph[v].append((u, cost))
+    return graph
+
+def dijkstra(graph, source):
+    import heapq
+
+    # Khởi tạo khoảng cách từ source đến tất cả đỉnh là vô cùng
+    distances = {vertex: float('inf') for vertex in graph}
+    distances[source] = 0
+    parent = {vertex: None for vertex in graph}  # Lưu trữ đỉnh cha để truy vết đường đi
+    # Sử dụng priority queue để lưu trữ các đỉnh theo khoảng cách ngắn nhất
+    priority_queue = [(0, source)]  # (khoảng cách, đỉnh)
+    visited = set()  # Tập hợp các đỉnh đã được xử lý
+
+    while priority_queue:
+        current_distance, current_vertex = heapq.heappop(priority_queue)
+
+        # Nếu khoảng cách hiện tại lớn hơn khoảng cách đã lưu, bỏ qua
+        if current_distance > distances[current_vertex]:
+            continue
+        visited.add(current_vertex)
+
+        # Duyệt qua các đỉnh kề của đỉnh hiện tại
+        for neighbor, weight in graph[current_vertex]:
+            distance = current_distance + weight
+
+            # Nếu tìm thấy đường đi ngắn hơn, cập nhật khoảng cách và thêm vào priority queue
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                parent[neighbor] = current_vertex
+                heapq.heappush(priority_queue, (distance, neighbor))
+
+    return distances, parent
+
+def shortest_route(graph, source, target):
+    # Gọi Dijkstra
+    dist, parent = dijkstra(graph, source)
+
+    # Nếu không tìm thấy đường đi
+    if dist[target] == float('inf'):
+        return None, float('inf')
+    
+    # Truy vết đường đi từ target về source
+    path = []
+    current_vertex = target
+    while current_vertex is not None:
+        path.append(current_vertex)
+        current_vertex = parent[current_vertex]
+    
+    path.reverse()  # Đảo ngược để có đường đi từ source đến target
+    return path, dist[target]
+
+def demo_routing_shortest_path():
+    # Tạo 1 đồ thị “mạng kho” (5–8 đỉnh: WH1, WH2, HCM, HN, DN…)
+    edges = [
+        ('WH1', 'HCM', 10),
+        ('WH1', 'DN', 15),
+        ('WH2', 'HCM', 5),
+        ('WH2', 'HN', 20),
+        ('HCM', 'DN', 10),
+        ('DN', 'HN', 25)
+    ]
+
+    # Cho user nhập source, target.
+    source = input("Nhập điểm xuất phát (WH1, WH2, HCM, HN, DN): ")
+    target = input("Nhập điểm đích (WH1, WH2, HCM, HN, DN): ")
+
+    # In: route + tổng chi phí.
+    # Xây dựng đồ thị từ danh sách cạnh
+    graph = build_graph(edges)
+    path, cost = shortest_route(graph, source, target)
+    if path:
+        print(f"Đường đi ngắn nhất từ {source} đến {target}: {' -> '.join(path)} với tổng chi phí: {cost}")
+    else:
+        print(f"Không tìm thấy đường đi từ {source} đến {target}")
+demo_routing_shortest_path()
+    
+# DSU (union-find)
+def make_set(vertices):
+    # Khởi tạo mỗi đỉnh là một tập riêng.
+
+    parent = {}
+
+    for v in vertices:
+        parent[v] = v
+
+    return parent
+
+
+def find(parent, v):
+    # Tìm gốc (root) của tập chứa v.
+
+    while parent[v] != v:
+        v = parent[v]
+
+    return v
+
+
+def union(parent, a, b):
+   # Gộp hai tập chứa a và b.
+    
+    root_a = find(parent, a)
+    root_b = find(parent, b)
+
+    if root_a != root_b:
+        parent[root_b] = root_a
+
+
+def kruskal_mst(vertices, edges):
+    # Tìm cây khung nhỏ nhất (MST) bằng thuật toán Kruskal.
+
+    # Bước 1: Sắp xếp các cạnh theo trọng số tăng dần.
+    edges.sort(key=lambda x: x[0])  
+
+    # Bước 2: Khởi tạo DSU
+    parent = make_set(vertices)
+
+    mst_edges = []  # Danh sách các cạnh trong MST
+    total_cost = 0  # Tổng chi phí của MST
+
+    # Bước 3: Duyệt qua các cạnh đã sắp xếp
+    for u, v, cost in edges:
+        root_u = find(parent, u)
+        root_v = find(parent, v)
+
+        # Nếu khác tập → thêm cạnh
+        if root_u != root_v:
+
+            mst_edges.append((u, v, cost))
+            total_cost += cost
+
+            union(parent, root_u, root_v)
+
+        # Đủ |V|-1 cạnh thì dừng
+        if len(mst_edges) == len(vertices) - 1:
+            break
+
+    return mst_edges, total_cost
+
+def demo_kruskal_mst():
+    # Dùng cùng tập kho như trên.
+    edges = [
+        ('WH1', 'HCM', 10),
+        ('WH1', 'DN', 15),
+        ('WH2', 'HCM', 5),
+        ('WH2', 'HN', 20),
+        ('HCM', 'DN', 10),
+        ('DN', 'HN', 25)
+    ]
+
+    # Danh sách đường truyền được chọn. 
+    vertices = ['WH1', 'WH2', 'HCM', 'HN', 'DN']
+
+    # Tổng chi phí lắp đặt.
+    mst_edges, total_cost = kruskal_mst(vertices, edges)
+    print("Các cạnh trong cây khung nhỏ nhất (MST):")
+
+    
+    for u, v, cost in mst_edges:
+        print(f"{u} -- {v} với chi phí: {cost}")
+        print(f"Tổng chi phí lắp đặt: {total_cost}")
+        print("Đây là bộ khung tối thiểu, các tuyến giao hàng chi tiết dùng Dijkstra trên mạng này.")
+demo_kruskal_mst()
+
+# hasing tool
+class OrderHashTable:
+    def __init__(self, size=10):
+        # Khởi tạo hash table với số bucket = size.
+        self.size = size
+        self.table = [[] for _ in range(size)]   # Separate Chaining
+
+    def _hash(self, order_id):
+        # Hàm băm.
+        return hash(order_id) % self.size
+
+    def insert(self, order_id, order_data):
+        # Thêm hoặc cập nhật đơn hàng.
+
+        index = self._hash(order_id)
+        bucket = self.table[index]
+
+        # Nếu đã tồn tại thì cập nhật
+        for i, (key, value) in enumerate(bucket):
+            if key == order_id:
+                bucket[i] = (order_id, order_data)
+                return
+
+        # Chưa có thì thêm mới
+        bucket.append((order_id, order_data))
+
+    def get(self, order_id):
+        # Lấy thông tin đơn hàng.
+
+        index = self._hash(order_id)
+        bucket = self.table[index]
+
+        for key, value in bucket:
+            if key == order_id:
+                return value
+
+        return None
+
+    def remove(self, order_id):
+        # Xóa đơn hàng.
+
+        index = self._hash(order_id)
+        bucket = self.table[index]
+
+        for i, (key, value) in enumerate(bucket):
+            if key == order_id:
+                del bucket[i]
+                return True
+
+        return False
+
+    def display(self):
+        # Hiển thị toàn bộ Hash Table.
+      
+        print("===== HASH TABLE =====")
+        for i, bucket in enumerate(self.table):
+            print(f"Bucket {i}: {bucket}")
+
+def demo_order_hash_table():
+    print("===== DEMO ORDER HASH TABLE =====")
+
+    # Khởi tạo Hash Table
+    orders = OrderHashTable(size=10)
+
+    # Thêm các đơn hàng mẫu
+    orders.insert("OD001", {
+        "customer": "Nguyen Van A",
+        "product": "Laptop",
+        "total": 1500
+    })
+
+    orders.insert("OD002", {
+        "customer": "Tran Thi B",
+        "product": "Phone",
+        "total": 800
+    })
+
+    orders.insert("OD003", {
+        "customer": "Le Van C",
+        "product": "Headphone",
+        "total": 200
+    })
+
+    print("\n1. Sau khi insert:")
+    orders.display()
+
+    # Test get
+    print("\n2. Get đơn hàng OD002:")
+    order = orders.get("OD002")
+
+    if order:
+        print(order)
+    else:
+        print("Không tìm thấy đơn hàng.")
+
+    # Test remove
+    print("\n3. Remove đơn hàng OD002:")
+    if orders.remove("OD002"):
+        print("Xóa thành công.")
+    else:
+        print("Không tìm thấy đơn hàng.")
+
+    print("\n4. Hash Table sau khi remove:")
+    orders.display()
+demo_order_hash_table()
+
+def group_coupon_anagrams(codes):
+    # Nhóm các mã coupon là anagram của nhau.
+    groups = {}
+
+    for code in codes:
+        # Tạo key bằng cách sắp xếp ký tự
+        key = "".join(sorted(code))
+
+        if key not in groups:
+            groups[key] = []
+
+        groups[key].append(code)
+
+    return list(groups.values())
+
+def demo_group_coupon_anagrams():
+
+    codes = [
+        "SAVE10",
+        "AVES10",
+        "VEAS10",
+        "WELCOME",
+        "COMEWEL",
+        "HELLO",
+        "OLLEH",
+        "DISCOUNT"
+    ]
+
+    groups = group_coupon_anagrams(codes)
+
+    print("===== GROUP COUPON ANAGRAMS =====\n")
+
+    for i, group in enumerate(groups, start=1):
+        print(f"Nhóm {i}:")
+        print(group)
+        print()
+demo_group_coupon_anagrams()
+
+def longest_consecutive_days(days):
+    # Tìm chuỗi ngày liên tiếp dài nhất.
+    if not days:
+        return [], 0
+
+    day_set = set(days) #parameter
+
+    longest_sequence = []
+    max_length = 0
+
+    for day in day_set:
+
+        # Chỉ bắt đầu nếu day là đầu chuỗi
+        if day - 1 not in day_set:
+
+            current = day
+            sequence = []
+
+            while current in day_set:
+                sequence.append(current)
+                current += 1
+
+            if len(sequence) > max_length:
+                max_length = len(sequence)
+                longest_sequence = sequence
+
+    return longest_sequence, max_length
+
+def demo_longest_consecutive_days():
+
+    days = [8, 2, 3, 7, 4, 20, 1, 5, 30, 31]
+
+    sequence, length = longest_consecutive_days(days)
+
+    print("===== LONGEST CONSECUTIVE DAYS =====")
+
+    print("Days:")
+    print(days)
+
+    print("\nPhát hiện chuỗi ngày hệ thống có nhiều đơn hàng liên tiếp.:")
+    print(sequence)
+
+    print("Length:", length)
+demo_longest_consecutive_days()
+
+def count_revenue_windows(revenues, k):
+    prefix_sum = 0
+    count = 0
+
+    # Hash Map lưu số lần xuất hiện của prefix_sum
+    prefix_count = {0: 1}
+
+    for revenue in revenues:
+
+        prefix_sum += revenue
+
+        # Nếu đã có prefix_sum - k
+        if (prefix_sum - k) in prefix_count:
+            count += prefix_count[prefix_sum - k]
+
+        # Cập nhật prefix_sum
+        prefix_count[prefix_sum] = prefix_count.get(prefix_sum, 0) + 1
+
+    return count
+
+def demo_count_revenue_windows():
+
+    print("===== SUBARRAY SUM = K =====")
+
+    tests = [
+        ([1, 1, 1], 2),
+        ([1, 2, 3], 3),
+        ([2, 3, 1, 2, 4], 6),
+        ([3, 4, 7, 2, -3, 1, 4, 2], 7)
+    ]
+
+    for revenues, k in tests:
+
+        print("\nRevenue:", revenues)
+        print("Target :", k)
+
+        result = count_revenue_windows(revenues, k)
+
+        print("Số khoảng doanh thu =", result)
+demo_count_revenue_windows()
+
+def rolling_hash_search(text, pattern):
+    # Tìm tất cả vị trí xuất hiện của pattern trong text bằng thuật toán Rabin-Karp (Rolling Hash).
+    if not pattern or len(pattern) > len(text):
+        return []
+
+    base = 256          # số ký tự ASCII
+    mod = 101           # số nguyên tố
+
+    m = len(pattern)
+    n = len(text)
+
+    pattern_hash = 0
+    window_hash = 0
+
+    h = 1
+
+    # h = base^(m-1) % mod
+    for _ in range(m - 1):
+        h = (h * base) % mod
+
+    # Hash ban đầu
+    for i in range(m):
+        pattern_hash = (base * pattern_hash + ord(pattern[i])) % mod
+        window_hash = (base * window_hash + ord(text[i])) % mod
+
+    result = []
+
+    # Trượt cửa sổ
+    for i in range(n - m + 1):
+
+        # Nếu hash giống nhau
+        if pattern_hash == window_hash:
+
+            # So sánh lại để tránh collision
+            if text[i:i+m] == pattern:
+                result.append(i)
+
+        # Rolling Hash
+        if i < n - m:
+
+            window_hash = (
+                base * (window_hash - ord(text[i]) * h)
+                + ord(text[i + m])
+            ) % mod
+
+            if window_hash < 0:
+                window_hash += mod
+
+    return result
+
+def demo_rolling_coupon_search():
+
+    text = (
+        "User A used SAVE10 today. "
+        "User B used DISCOUNT20. "
+        "User C tried SAVE10 again. "
+        "WELCOME coupon was also applied."
+    )
+
+    patterns = [
+        "SAVE10",
+        "WELCOME",
+        "DISCOUNT20",
+        "FREE50"
+    ]
+
+    print("===== ROLLING HASH =====")
+    print("\nLog:")
+    print(text)
+
+    for pattern in patterns:
+
+        positions = rolling_hash_search(text, pattern)
+
+        print(f"\nPattern: {pattern}")
+
+        if positions:
+            print("Found at positions:", positions)
+        else:
+            print("Not found.")
+demo_rolling_coupon_search()
+
+# promo opt
+def fib_memo(n):
+    memo = {}
+
+    def dp(x):
+        if x in memo:
+            return memo[x]
+
+        if x <= 1:
+            return x
+
+        memo[x] = dp(x - 1) + dp(x - 2)
+        return memo[x]
+
+    return dp(n)
+
+def climb_stairs(n):
+    # Trả về số cách leo n bậc.
+
+    if n <= 2:
+        return n
+
+    dp = [0] * (n + 1)
+
+    dp[1] = 1
+    dp[2] = 2
+
+    for i in range(3, n + 1):
+        dp[i] = dp[i - 1] + dp[i - 2]
+
+    return dp[n]
+
+def demo_dp_basics():
+
+    print("===== DYNAMIC PROGRAMMING BASICS =====")
+
+    n = 10
+
+    print(f"\nFib({n}) = {fib_memo(n)}")
+
+    print()
+
+    for i in range(1, 8):
+        print(f"Climb Stairs({i}) = {climb_stairs(i)}")
+demo_dp_basics()
+
+def promo_knapsack(price, bonus_score, B):
+    # price        : trọng lượng
+    # bonus_score  : giá trị
+    # B            : ngân sách
+
+    n = len(price)
+
+    dp = [[0]*(B+1) for _ in range(n+1)]
+
+    for i in range(1, n+1):
+
+        for w in range(B+1):
+
+            # Không chọn sản phẩm
+            dp[i][w] = dp[i-1][w]
+
+            # Nếu đủ ngân sách
+            if price[i-1] <= w:
+
+                dp[i][w] = max(
+                    dp[i][w],
+                    bonus_score[i-1] +
+                    dp[i-1][w-price[i-1]]
+                )
+    # Truy vết
+    selected = []
+
+    w = B
+
+    for i in range(n,0,-1):
+
+        if dp[i][w] != dp[i-1][w]:
+
+            selected.append(i-1)
+
+            w -= price[i-1]
+
+    selected.reverse()
+
+    return dp[n][B], selected
+
+def demo_knapsack():
+
+    products = [
+        "Laptop",
+        "Phone",
+        "Mouse",
+        "Keyboard"
+    ]
+
+    price = [4,3,2,5]
+
+    bonus = [10,4,7,9]
+
+    B = 8
+
+    result = promo_knapsack(price, bonus, B)
+
+    print("===== PROMO KNAPSACK =====")
+
+    print("Products:", products)
+
+    print("Price :", price)
+
+    print("Bonus :", bonus)
+
+    print("Budget:", B)
+
+    print()
+
+    print("Maximum Bonus =", result)
+demo_knapsack()
+
+def build_combo_dp_table(prices, scores, B):
+    n = len(prices)
+
+    # Khởi tạo bảng DP (n+1) x (B+1)
+    dp = [[0] * (B + 1) for _ in range(n + 1)]
+
+    # Xây bảng DP
+    for i in range(1, n + 1):
+
+        for b in range(B + 1):
+
+            # Không chọn sản phẩm thứ i
+            dp[i][b] = dp[i - 1][b]
+
+            # Nếu đủ ngân sách thì xét chọn
+            if prices[i - 1] <= b:
+
+                dp[i][b] = max(
+                    dp[i][b],
+                    dp[i - 1][b - prices[i - 1]] + scores[i - 1]
+                )
+
+    return dp
+
+def trace_combo_from_dp(dp, prices, scores, B):
+    # Truy vết các sản phẩm được chọn từ bảng DP.
+
+    selected_items = []
+    i = len(prices)
+    b = B
+
+
+    while i > 0 and b > 0:
+
+        # Nếu giá trị khác dòng trên -> sản phẩm được chọn
+        if dp[i][b] != dp[i-1][b]:
+            # không chọn item 
+            i -= 1
+        else:
+            # chọn item
+            selected_items.append(i-1)
+
+            # Giảm ngân sách còn lại
+            b -= prices[i-1]
+            i -= 1
+
+    selected_items.reverse()
+
+    return selected_items
+
+def demo_combo_knapsack_2d():
+
+
+    print("===== COMBO KNAPSACK 0/1 =====")
+
+    # Danh sách sản phẩm
+    products = [
+        "Laptop",
+        "Phone",
+        "Mouse",
+        "Keyboard",
+        "Headphone"
+    ]
+
+    # Giá sản phẩm
+    prices = [4, 3, 2, 5, 1]
+
+    # Điểm khuyến mãi
+    scores = [10, 4, 7, 9, 2]
+
+    # Ngân sách
+    B = 8
+
+    # Xây bảng DP
+    dp = build_combo_dp_table(prices, scores, B)
+
+    print("\nBảng DP:")
+
+    for row in dp:
+        print(row)
+
+    # Truy vết sản phẩm
+    selected = trace_combo_from_dp(dp, prices, scores, B)
+
+    print("\n========== KẾT QUẢ ==========")
+
+    print("Ngân sách:", B)
+    print("Điểm tối đa:", dp[len(prices)][B])
+
+    total_price = 0
+    total_score = 0
+
+    print("\nCác sản phẩm được chọn:")
+
+    for i in selected:
+        print(
+            f"- {products[i]} "
+            f"(Price={prices[i]}, Score={scores[i]})"
+        )
+
+        total_price += prices[i]
+        total_score += scores[i]
+
+    print("\nTổng giá:", total_price)
+    print("Tổng điểm:", total_score)
+demo_combo_knapsack_2d()
+
+def combo_knapsack_1d(prices, scores, B):
+    n = len(prices)
+
+    # dp[b] = điểm tối đa với ngân sách b
+    dp = [0] * (B + 1)
+
+    for i in range(n):
+
+        # Duyệt NGƯỢC
+        for b in range(B, prices[i] - 1, -1):
+
+            dp[b] = max(
+                dp[b],
+                dp[b - prices[i]] + scores[i]
+            )
+
+    return dp[B]
+
+def demo_combo_knapsack_1d():
+
+    print("===== DEMO KNAPSACK 1D =====")
+
+    products = [
+        "Laptop",
+        "Phone",
+        "Mouse",
+        "Keyboard",
+        "Headphone"
+    ]
+
+    prices = [4, 3, 2, 5, 1]
+    scores = [10, 4, 7, 9, 2]
+
+    B = 8
+
+    # Phiên bản 2D
+    dp2 = build_combo_dp_table(prices, scores, B)
+    max_score_2d = dp2[len(prices)][B]
+
+    # Phiên bản 1D
+    max_score_1d = combo_knapsack_1d(prices, scores, B)
+
+    print("Budget:", B)
+
+    print("\nMax Score (2D):", max_score_2d)
+    print("Max Score (1D):", max_score_1d)
+
+    if max_score_1d == max_score_2d:
+        print("\n✓ Hai phiên bản cho cùng kết quả.")
+    else:
+        print("\n✗ Có sự khác biệt.")
+demo_combo_knapsack_1d()
